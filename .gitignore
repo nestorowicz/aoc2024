@@ -2,3 +2,8 @@
 **/input.txt
 input/
 **/input/
+
+
+# Added by cargo
+
+/target
