@@ -56,50 +56,58 @@ fn main() {
 }
 
 fn calculate_region_price(garden: &Vec<Vec<char>>, mem: &mut HashSet<Point>, y: usize, x: usize) -> u64 {
-    if let Some((area, perimeter)) = visit(garden, mem, &Point{y, x}, None) {
-        println!("Visited region {}: {} {}", garden[y][x], area, perimeter);
-        println!();
+    if let Some((area, perimeter)) = visit(garden, mem, &Point{y, x}) {
         return area * perimeter;
     }
     return 0;
 }
 
-fn visit(garden: &Vec<Vec<char>>, mem: &mut HashSet<Point>, point: &Point, prev: Option<&Point>) -> Option<(u64, u64)> {
+fn has_symbol(dir: Option<(Point, char)>, symbol: &char) -> bool {
+    return dir.is_some() && dir.unwrap().1 == *symbol
+}
+
+fn visit(garden: &Vec<Vec<char>>, mem: &mut HashSet<Point>, point: &Point) -> Option<(u64, u64)> {
     let symbol = garden.get(point.y)?.get(point.x)?;
     if mem.contains(&point) {
         return None
     }
     mem.insert(point.clone());
-    println!("Visiting {:?} prev {:?}", point, prev);
 
     let up = garden.move_up(&point);
     let right = garden.move_right(&point);
     let down = garden.move_down(&point);
     let left = garden.move_left(&point);
-
-    let prev_up = if prev.is_some() { garden.move_up(&prev.unwrap()) } else { None };
-    let prev_right = if prev.is_some() { garden.move_right(&prev.unwrap()) } else { None };
-    let prev_down = if prev.is_some() { garden.move_down(&prev.unwrap()) } else { None };
-    let prev_left = if prev.is_some() { garden.move_left(&prev.unwrap()) } else { None };
+    let up_right = if up.is_some() { garden.move_right(&up.unwrap().0) } else { None };
+    let up_left = if up.is_some() { garden.move_left(&up.unwrap().0) } else { None };
+    let down_right = if down.is_some() { garden.move_right(&down.unwrap().0) } else { None };
+    let down_left = if down.is_some() { garden.move_left(&down.unwrap().0) } else { None };
 
     let mut perimeter = 0;
-    if (up.is_none() || up.unwrap().1 != *symbol) && (prev.is_none() || (prev_up.is_some() && prev_up.unwrap().1 == *symbol)) {
-        println!("perimeter up");
+    if !has_symbol(up, symbol) && !has_symbol(right, symbol) {
         perimeter += 1;
     }
-    if (right.is_none() || right.unwrap().1 != *symbol) && (prev.is_none() || (prev_right.is_some() && prev_right.unwrap().1 == *symbol)) {
-        println!("perimeter right");
+    if !has_symbol(up, symbol) && !has_symbol(left, symbol) {
         perimeter += 1;
     }
-    if (down.is_none() || down.unwrap().1 != *symbol) && (prev.is_none() || (prev_down.is_some() && prev_down.unwrap().1 == *symbol)) {
-        println!("perimeter down");
+    if !has_symbol(down, symbol) && !has_symbol(right, symbol) {
         perimeter += 1;
     }
-    if (left.is_none() || left.unwrap().1 != *symbol) && (prev.is_none() || (prev_left.is_some() && prev_left.unwrap().1 == *symbol)) {
-        println!("perimeter left");
+    if !has_symbol(down, symbol) && !has_symbol(left, symbol) {
         perimeter += 1;
     }
-    println!("sides {}", perimeter);
+
+    if has_symbol(up, symbol) && has_symbol(right, symbol) && !has_symbol(up_right, symbol) {
+        perimeter += 1;
+    }
+    if has_symbol(up, symbol) && has_symbol(left, symbol)  && !has_symbol(up_left, symbol){
+        perimeter += 1;
+    }
+    if has_symbol(down, symbol) && has_symbol(right, symbol)  && !has_symbol(down_right, symbol){
+        perimeter += 1;
+    }
+    if has_symbol(down, symbol) && has_symbol(left, symbol)  && !has_symbol(down_left, symbol){
+        perimeter += 1;
+    }
 
     let dirs = vec![up, right, down, left];
     let neighbors: Vec<&(Point, char)> = dirs
@@ -110,8 +118,7 @@ fn visit(garden: &Vec<Vec<char>>, mem: &mut HashSet<Point>, point: &Point, prev:
 
     let (area, perimeter) = neighbors
         .iter()
-        .filter_map(|(next, _)| visit(garden, mem, next, Some(point)))
-        .map(|(a, p)| { println!("{}, {}", a, p); (a, p) })
+        .filter_map(|(next, _)| visit(garden, mem, next))
         .fold((1, perimeter), |(area, perimeter), (a, p)| (area+a, perimeter+p));
 
     return Some((area as u64, perimeter as u64));
