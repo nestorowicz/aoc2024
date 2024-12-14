@@ -1,4 +1,3 @@
-use std::cmp::{min, max};
 use std::io::{read_to_string, stdin};
 use scanf::sscanf;
 
