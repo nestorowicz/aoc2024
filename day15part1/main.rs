@@ -1,5 +1,5 @@
 use std::io::{read_to_string, stdin};
-use aoc::{Point, Map};
+use aoc::{Point, Map, Direction};
 
 const ROBOT: char = '@';
 const BOX: char = 'O';
@@ -38,71 +38,31 @@ fn parse_input() -> State {
 }
 
 fn apply_move(map: &mut Map<char>, robot: &mut Point, m: char) {
-    let p = match m {
-        '<' => move_left(map, robot.clone()),
-        '^' => move_up(map, robot.clone()),
-        '>' => move_right(map, robot.clone()),
-        'v' => move_down(map, robot.clone()),
-        _ => robot.clone() 
+    let dir = match m {
+        '<' => Some(Direction::Left),
+        '^' => Some(Direction::Up),
+        '>' => Some(Direction::Right),
+        'v' => Some(Direction::Down),
+        _ => None
     };
+    let Some(dir) = dir else { return; };
+
+    let p = move_dir(map, robot.clone(), &dir);
     robot.x = p.x;
     robot.y = p.y;
 }
 
-fn move_left(map: &mut Map<char>, point: Point) -> Point {
+fn move_dir(map: &mut Map<char>, point: Point, dir: &Direction) -> Point {
     let Some(c) = map.peek(&point) else { return point };
     let c = *c;
     if c != ROBOT && c != BOX { return point; }
 
-    let Some(left) = map.move_left(&point) else { return point; };
-    move_left(map, left);
-    let Some(l) = map.peek(&left) else { return point };
+    let Some(next) = map.move_dir(&point, dir) else { return point; };
+    move_dir(map, next, dir);
+    let Some(l) = map.peek(&next) else { return point };
     if *l != NOTHING { return point };
 
-    map.state[left.y][left.x] = c;
+    map.state[next.y][next.x] = c;
     map.state[point.y][point.x] = NOTHING;
-    return left;
+    return next;
 }
-fn move_up(map: &mut Map<char>, point: Point) -> Point {
-    let Some(c) = map.peek(&point) else { return point; };
-    let c = *c;
-    if c != ROBOT && c != BOX { return point; }
-
-    let Some(up) = map.move_up(&point) else { return point; };
-    move_up(map, up);
-    let Some(l) = map.peek(&up) else { return point; };
-    if *l != NOTHING { return point; };
-
-    map.state[up.y][up.x] = c;
-    map.state[point.y][point.x] = NOTHING;
-    return up;
-}
-fn move_right(map: &mut Map<char>, point: Point) -> Point {
-    let Some(c) = map.peek(&point) else { return point; };
-    let c = *c;
-    if c != ROBOT && c != BOX { return point; }
-
-    let Some(right) = map.move_right(&point) else { return point; };
-    move_right(map, right);
-    let Some(l) = map.peek(&right) else { return point; };
-    if *l != NOTHING { return point; };
-
-    map.state[right.y][right.x] = c;
-    map.state[point.y][point.x] = NOTHING;
-    return right
-}
-fn move_down(map: &mut Map<char>, point: Point) -> Point {
-    let Some(c) = map.peek(&point) else { return point; };
-    let c = *c;
-    if c != ROBOT && c != BOX { return point; }
-
-    let Some(down) = map.move_down(&point) else { return point; };
-    move_down(map, down);
-    let Some(l) = map.peek(&down) else { return point; };
-    if *l != NOTHING { return point; };
-
-    map.state[down.y][down.x] = c;
-    map.state[point.y][point.x] = NOTHING;
-    return down;
-}
-

@@ -1,3 +1,5 @@
+use std::io::stdin;
+
 #[derive(Debug)]
 #[derive(PartialEq)]
 #[derive(Eq)]
@@ -12,6 +14,18 @@ pub struct Point {
 #[derive(Debug)]
 pub struct Map<T> {
     pub state: Vec<Vec<T>>
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+    UpRight,
+    UpLeft,
+    DownRight,
+    DownLeft
 }
 
 impl<T> Map<T> {
@@ -31,6 +45,18 @@ impl<T> Map<T> {
     pub fn move_right(&self, point: &Point) -> Option<Point> {
         self.state.get(point.y)?.get(point.x+1)?;
         return Some(Point{y: point.y, x: point.x+1});
+    }
+    pub fn move_dir(&self, point: &Point, dir: &Direction) -> Option<Point> {
+        match dir {
+            Direction::Up => self.move_up(point),
+            Direction::Down => self.move_down(point),
+            Direction::Left => self.move_left(point),
+            Direction::Right => self.move_right(point),
+            Direction::UpLeft => self.move_left(&self.move_up(point)?),
+            Direction::UpRight => self.move_right(&self.move_up(point)?),
+            Direction::DownLeft => self.move_left(&self.move_down(point)?),
+            Direction::DownRight => self.move_right(&self.move_down(point)?),
+        }
     }
     pub fn height(&self) -> usize {
         return self.state.len();
@@ -61,6 +87,13 @@ pub fn print_char_map(map: &Map<char>) {
         println!();
     }
 }
+
+pub fn read_line() -> String {
+    let mut inp = String::new();
+    _ = stdin().read_line(&mut inp).ok().expect("could not read stdin");
+    return inp
+}
+
 
 #[cfg(test)]
 mod tests {
