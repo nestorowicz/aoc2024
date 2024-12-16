@@ -1,22 +1,43 @@
 use std::io::stdin;
+use std::fmt::Debug;
 
-#[derive(Debug)]
-#[derive(PartialEq)]
-#[derive(Eq)]
-#[derive(Hash)]
-#[derive(Clone)]
-#[derive(Copy)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct Point {
     pub y: usize,
     pub x: usize
 }
 
-#[derive(Debug)]
-pub struct Map<T> {
-    pub state: Vec<Vec<T>>
+impl Point {
+    pub fn new(x: usize, y: usize) -> Point {
+        return Point{x, y};
+    }
+    pub fn move_up(&self) -> Option<Point> {
+        return Some(Point{y: self.y.checked_sub(1)?, x: self.x});
+    }
+    pub fn move_down(&self) -> Option<Point> {
+        return Some(Point{y: self.y+1, x: self.x});
+    }
+    pub fn move_left(&self) -> Option<Point> {
+        return Some(Point{y: self.y, x: self.x.checked_sub(1)?});
+    }
+    pub fn move_right(&self) -> Option<Point> {
+        return Some(Point{y: self.y, x: self.x+1});
+    }
+    pub fn move_in_direction(&self, dir: &Direction) -> Option<Point> {
+        match dir {
+            Direction::Up => self.move_up(),
+            Direction::Down => self.move_down(),
+            Direction::Left => self.move_left(),
+            Direction::Right => self.move_right(),
+            Direction::UpLeft => self.move_left()?.move_up(),
+            Direction::UpRight => self.move_right()?.move_up(),
+            Direction::DownLeft => self.move_left()?.move_down(),
+            Direction::DownRight => self.move_right()?.move_down(),
+        }
+    }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum Direction {
     Up,
     Down,
@@ -28,7 +49,49 @@ pub enum Direction {
     DownLeft
 }
 
-impl<T> Map<T> {
+impl Direction {
+    pub fn rotate_90_clockwise(&self) -> Direction {
+        return match self {
+            Direction::Up => Direction::Right,
+            Direction::Right => Direction::Down,
+            Direction::Down => Direction::Left,
+            Direction::Left => Direction::Up,
+            Direction::UpLeft => Direction::UpRight,
+            Direction::UpRight => Direction::DownRight,
+            Direction::DownRight => Direction::DownLeft,
+            Direction::DownLeft => Direction::UpLeft
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Ray {
+    pub point: Point,
+    pub direction: Direction
+}
+
+impl Ray {
+    pub fn new(point: Point, direction: Direction) -> Ray {
+        return Ray{point, direction};
+    }
+    pub fn move_by_one(&self) -> Option<Ray> {
+        return Some(Ray{point: self.point.move_in_direction(&self.direction)?, direction: self.direction});
+    }
+    pub fn rotate_90_clockwise(&self) -> Ray {
+        return Ray{point: self.point, direction: self.direction.rotate_90_clockwise()}
+    }
+    pub fn rotate_90_counter_clockwise(&self) -> Ray {
+        return Ray{point: self.point, direction: self.direction.rotate_90_clockwise().rotate_90_clockwise().rotate_90_clockwise()}
+    }
+}
+
+#[derive(Debug)]
+pub struct Map<T> {
+    pub state: Vec<Vec<T>>
+}
+
+impl<T> Map<T> where
+    T:  Debug + PartialEq {
     pub fn peek(&self, point: &Point) -> Option<&T> {
         return Some(self.state.get(point.y)?.get(point.x)?);
     }
@@ -69,7 +132,14 @@ impl<T> Map<T> {
             .enumerate()
             .flat_map(|(y, line)| {
                 line.iter().enumerate().map(move |(x, _)| Point{x, y})
-            });}
+            });
+    }
+    pub fn find_position(&self, expected: &T) -> Option<Point> {
+        return self.iter_points()
+            .filter_map(|point| Some((point, self.peek(&point)?)))
+            .find(|(_, element)| expected == *element)
+            .map(|(point, _)| point);
+    }
 }
 
 // This code assumes that the input is correct
