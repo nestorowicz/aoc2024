@@ -64,7 +64,7 @@ impl Direction {
     }
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Eq, Debug, Hash, Clone, Copy)]
 pub struct Ray {
     pub point: Point,
     pub direction: Direction
@@ -85,7 +85,7 @@ impl Ray {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Map<T> {
     pub state: Vec<Vec<T>>
 }
@@ -202,4 +202,13 @@ mod tests {
         let down_none = map.move_down(&Point{x: 0, y: 1});
         assert!(down_none.is_none());
     }
+}
+
+pub fn is_debug() -> bool {
+    return std::env::var("DEBUG").is_ok();
+}
+
+#[macro_export]
+macro_rules! debug {
+    ($($arg:tt)*) => { if is_debug() { std::println!($($arg)*) } };
 }
