@@ -1,3 +1,4 @@
+from collections import namedtuple
 import os
 
 def debug(arg):
