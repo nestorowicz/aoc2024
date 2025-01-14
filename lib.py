@@ -32,3 +32,4 @@ def print_board(board):
     for line in board:
         for symbol in line:
             print(symbol, end='')
+        print()
