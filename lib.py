@@ -38,10 +38,13 @@ def print_board(board):
 def parse_board():
     return [ [ c for c in line.strip() ] for line in fileinput.input() ]
 
-def neighbors_cross(board, pt):
+def is_on_board(pt, board):
     bh = len(board)
     bw = len(board[0])
-    return [pt for pt in [Point(pt.x+1,pt.y), Point(pt.x-1,pt.y), Point(pt.x,pt.y+1), Point(pt.x,pt.y-1)] if (0 < pt.x < bw) and (0 < pt.y < bh)]
+    return (0 < pt.x < bw) and (0 < pt.y < bh)
+
+def neighbors_cross(board, pt):
+    return [pt for pt in [Point(pt.x+1,pt.y), Point(pt.x-1,pt.y), Point(pt.x,pt.y+1), Point(pt.x,pt.y-1)] if is_on_board(pt, board)]
 
 def find_start_end(board):
     start = Point(0, 0)
