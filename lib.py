@@ -34,3 +34,22 @@ def print_board(board):
         for symbol in line:
             print(symbol, end='')
         print()
+
+def parse_board():
+    return [ [ c for c in line.strip() ] for line in fileinput.input() ]
+
+def neighbors_cross(board, pt):
+    bh = len(board)
+    bw = len(board[0])
+    return [pt for pt in [Point(pt.x+1,pt.y), Point(pt.x-1,pt.y), Point(pt.x,pt.y+1), Point(pt.x,pt.y-1)] if (0 < pt.x < bw) and (0 < pt.y < bh)]
+
+def find_start_end(board):
+    start = Point(0, 0)
+    end = Point(0, 0)
+    for y, line in enumerate(board):
+        for x, c in enumerate(line):
+            if c == 'S':
+                start = Point(x, y)
+            if c == 'E':
+                end = Point(x, y)
+    return start, end
